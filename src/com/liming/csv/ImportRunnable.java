@@ -31,21 +31,22 @@ public class ImportRunnable implements Runnable {
 
         String tmp = "";
         try{
-            conn = DriverManager.getConnection("jdbc:mySql://localhost:13306/liming?serverTimezone=GMT%2B8", "root", "root");
+            conn = DriverManager.getConnection("jdbc:mySql://localhost:3306/liming?serverTimezone=GMT%2B8", "root", "root");
             statement = conn.createStatement();
             reader = new CsvReader(path,',',Charset.forName("utf-8"));
             reader.readHeaders();
             //len表示的是有几个列
             int len = reader.getHeaders().length;
             //整个while就是为了组装成为 插入语句的形式
-            System.out.println(path.substring(path.lastIndexOf("/"))+"---文件开始导入...........");
+            System.out.println(path.substring(path.lastIndexOf("\\")+1)+"---文件开始导入...........");
             while(reader.readRecord()){
                 try{
-                    tmp = "insert into pat_lens_1 values(";
+                    tmp = "insert into patent_lens_data_distinct values(";
+                    // 取出列,索引从0开始
                     for(int i=1;i<len-1;i++){
-                        tmp += "'"+reader.get(i).replaceAll("'","\\\\'")+"',";
+                        tmp += "'"+ reader.get(i).replaceAll("\\\\","").replaceAll("'","\\\\'") +"',";
                     }
-                    tmp += "'"+reader.get(len-1).replaceAll("'","\\\\'")+"');";
+                    tmp += "'"+ reader.get(len-1).replaceAll("\\\\","").replaceAll("'","\\\\'") +"');";
                     //tmp就是组装好的插入语句，即insert into talble(属性）values（内容）；
                     statement.execute(tmp); //执行插入
                 }catch (Exception e){
@@ -54,7 +55,7 @@ public class ImportRunnable implements Runnable {
                     }
                 }
             }
-            System.out.println(path.substring(path.lastIndexOf("/"))+"---文件导入完毕...........");
+            System.out.println(path.substring(path.lastIndexOf("\\")+1)+"---文件导入完毕...........");
         }catch (Exception e){
             e.printStackTrace();
         }finally {

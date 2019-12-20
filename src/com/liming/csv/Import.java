@@ -1,6 +1,8 @@
 package com.liming.csv;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -13,18 +15,38 @@ import java.util.concurrent.Executors;
 public class Import {
 
     public static void main(String[] args) {
-
-        ExecutorService e = Executors.newFixedThreadPool(30);
-
-//        String path = "D:/liming/patent/2016/2016-12";
-        String path = "/opt/liming/patent-2014/patent-2014-12";
+//        String path = "/opt/liming/patent/patent-2014/";
+        String path = "D:/liming/patent/2016/";
         File file = new File(path);
-        File[] files = file.listFiles();
-        for (int i=0;i<files.length;i++){
-            ImportRunnable ir = new ImportRunnable(path+"/"+files[i].getName());
+        find_childNode(file);
+    }
+
+    public static void find_childNode(File file){
+        List<File> fileList = new ArrayList<File>();
+        // 当前目录下的子项目
+        File[] child_projects = file.listFiles();
+        for (int i=0; i<child_projects.length; i++){
+            // 判断目录还是文件
+            if(child_projects[i].isDirectory()){
+                // 继续找
+                find_childNode(child_projects[i]);
+            }else if(child_projects[i].isFile()){
+                fileList.add(child_projects[i]);
+            }
+        }
+        // 单个目录下的文件下载
+        //
+        if (fileList.size()>0){
+            start_run(fileList);
+        }
+    }
+
+    public static void start_run(List<File> files){
+        ExecutorService e = Executors.newFixedThreadPool(1);
+        for (File file: files){
+            ImportRunnable ir = new ImportRunnable(file.getPath());
             e.submit(ir);
         }
-
         e.shutdown();
     }
 }
